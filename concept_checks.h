@@ -83,6 +83,37 @@ Here is a list of concepts that we know how to check:
         __x = __x; \
     } while (0)
 
+#define __STL_REQUIRES_BINARY_OP(__opname, __ret, __first, __second) \
+    do { \
+        __ret (*__x)(__first&, __second&) = \
+            _STL_BINARY##__opname##_ERROR<__ret, __first, __second>::__binary_operator_requirement_violation; \
+        __ret (*__y)(const __first&, const __second&) = \
+            _STL_BINARY##__opname##_ERROR<__ret, __first, __second>::__const_binary_operator_requirement_violation; \
+        __y = __y; \
+        __x = __x; \
+    } while (0)
+
+#ifdef __STL_NO_FUNCTION_PTR_IN_CLASS_TEMPLATE
+
+#define __STL_CLASS_REQUIRES(__type_var, __concept)
+#define __STL_CLASS_REQUIRES_SAME_TYPE(__type_x, __type_y)
+#define __STL_CLASS_GENERATOR_CHECK(__func, __ret)
+#define __STL_CLASS_UNARY_FUNCTION_CHECK(__func, __ret, __arg)
+#define __STL_CLASS_BINARY_FUNCTION_CHECK(__func, __ret, __first, __second)
+#define __STL_CLASS_REQUIRES_BINARY_OP(__opname, __ret, __first, __second)
+
+#else
+//
+
+#define __STL_CLASS_REQUIRES(__type_var, __concept) \
+    typedef void (*__func##__type_var##__concept)(__type_var); \
+    template <__func##__type_var##__concept T> \
+    struct __dummy_struct_##__type_var##__concept {} ; \
+
+
+#endif
+
+
 
 #endif
 
