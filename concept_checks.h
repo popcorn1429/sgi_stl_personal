@@ -226,7 +226,11 @@ struct _STL_BINARY_FUNCTION_ERROR<__func, void, __first, __second> {
     }
 };
 
-
+#define __STL_DEFINE_BINARY_OP_CHECK(_OP, _NAME) \
+    template <typename __ret, typename __first, typename __second> \
+struct _STL_BINARY##_NAME##_ERROR { \
+    static __ret __const_binary_operator_requirement_violation()
+}
 
 
 #endif
