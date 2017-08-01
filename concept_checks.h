@@ -228,10 +228,158 @@ struct _STL_BINARY_FUNCTION_ERROR<__func, void, __first, __second> {
 
 #define __STL_DEFINE_BINARY_OP_CHECK(_OP, _NAME) \
     template <typename __ret, typename __first, typename __second> \
-struct _STL_BINARY##_NAME##_ERROR { \
-    static __ret __const_binary_operator_requirement_violation()
-}
+    struct _STL_BINARY##_NAME##_ERROR { \
+        static __ret __const_binary_operator_requirement_violation(const __first& __first_arg, const __second& __second_arg) \
+        { \
+            return __first_arg _OP __second_arg; \
+        } \
+        static __ret __binary_operator_requirement_violation(__first& __first_arg, __second& __second_arg) \
+        { \
+            return __first_arg _OP __second_arg; \
+        } \
+    }
 
+__STL_DEFINE_BINARY_OP_CHECK(==, _OP_EQUAL);
+__STL_DEFINE_BINARY_OP_CHECK(!=, _OP_NOT_EQUAL);
+__STL_DEFINE_BINARY_OP_CHECK(<, _OP_LESS_THAN);
+__STL_DEFINE_BINARY_OP_CHECK(<=, _OP_LESS_EQUAL);
+__STL_DEFINE_BINARY_OP_CHECK(>, _OP_GREATER_THAN);
+__STL_DEFINE_BINARY_OP_CHECK(>=, _OP_GREATER_EQUAL);
+__STL_DEFINE_BINARY_OP_CHECK(+, _OP_PLUS);
+__STL_DEFINE_BINARY_OP_CHECK(*, _OP_TIMES);
+__STL_DEFINE_BINARY_OP_CHECK(/ , _OP_DIVIDE);
+__STL_DEFINE_BINARY_OP_CHECK(- , _OP_SUBTRACT);
+__STL_DEFINE_BINARY_OP_CHECK(% , _OP_MOD);
+//...
+
+//
+#define __STL_DEFINE_UNARY_OP_CHECK(_OP, _NAME) \
+    template <typename __ret, typename __arg> \
+    struct _STL_UNARY##_NAME##_ERROR { \
+        static __ret __prefix_unary_operator_requirement_violation(__arg& __argument) \
+        { \
+            return _OP __argument; \
+        } \
+        static __ret __postfix_unary_operator_requirement_violation(__arg& __argument) \
+        { \
+            return __argument _OP; \
+        } \
+    }
+
+__STL_DEFINE_UNARY_OP_CHECK(++, _OP_INCREMENT);
+__STL_DEFINE_UNARY_OP_CHECK(--, _OP_DECREMENT);
+
+/*
+ The presence of this class is just to trick EDG into displaying 
+ these error messages before any other errors.
+ Without the class, the errors in the functions get reported after 
+ other class errors deep inside the library.
+ The name choice just make for an eye catching error messages :)
+*/
+struct _STL_ERROR {
+    template <typename T>
+    static T __default_constructor_requirement_violation(T) {
+        return T();
+    }
+
+    template <typename T>
+    static T __assignment_operator_requirement_violation(T __a) {
+        __a = __a;
+        return __a;
+    }
+
+    template <typename T>
+    static T __copy_constructor_requirement_violation(T __a) {
+        T __b(__a);
+        return __b;
+    }
+
+    template <typename T>
+    static T __const_parameter_required_for_copy_constructor(T ,const T& __b) {
+        T __c(__b);
+        return __c;
+    }
+
+    template <typename T>
+    static T __const_parameter_required_for_assignment_operator(T __a, const T& __b) {
+        __a = __b;
+        return __a;
+    }
+
+    template <typename T>
+    static T __less_than_comparable_requirement_violation(T __a, T __b) {
+        if (__a < __b || __a > __b || __a <= __b || __a >= __b) 
+            return __a;
+        return __b;
+    }
+
+    template <typename T>
+    static T __equality_comparable_requirement_violation(T __a, T __b) {
+        if (__a == __b || __a != __b)
+            return __a;
+        return __b;
+    }
+
+    template <typename T>
+    static void __dereference_operator_requirement_violation(T __iter) {
+        __sink_unused_warning(*__iter);
+    }
+
+    template <typename T>
+    static void __dereference_operator_and_assignment_requirement_violation(T __iter) {
+        *__iter = *__iter;
+    }
+
+    template <typename T>
+    static void __preincrement_operator_requirement_violation(T __iter) {
+        ++__iter;
+    }
+
+    template <typename T>
+    static void __postincrement_operator_requirement_violation(T __iter) {
+        __iter++;
+    }
+
+    template <typename T>
+    static void __predecrement_operator_requirement_violation(T __iter) {
+        --__iter;
+    }
+
+    template <typename T>
+    static void __postdecrement_operator_requirement_violation(T __iter) {
+        __iter--;
+    }
+
+    template <typename Iterator, typename T>
+    static void __postincrement_operator_and_assignment_requirement_violation(Iterator __iter, T __t) {
+        *__iter++ = __t;
+    }
+
+    template <typename Iterator, typename Distance>
+    static Iterator __iterator_addition_assignment_requirement_violation(Iterator __iter, Distance __n) {
+        __iter += __n;
+        return __iter;
+    }
+
+    template <typename Iterator, typename Distance>
+    static Iterator __iterator_addition_requirement_violation(Iterator __iter, Distance __n) {
+        __iter = __iter + __n;
+        __iter = __n + __iter;
+        return __iter;
+    }
+
+    template <typename Iterator, typename Distance>
+    static Iterator __iterator_subtraction_assignment_requirement_violation(Iterator __iter, Distance __n) {
+        __iter -= __n;
+        return __iter;
+    }
+
+    template <typename Iterator, typename Distance>
+    static Iterator __iterator_subtraction_requirement_violation(Iterator __iter, Distance __n) {
+        __iter = __iter - __n;
+        return __iter;
+    }
+};
 
 #endif
 
