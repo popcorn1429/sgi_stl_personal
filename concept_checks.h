@@ -379,7 +379,68 @@ struct _STL_ERROR {
         __iter = __iter - __n;
         return __iter;
     }
+
+    template <typename Iterator, typename Distance>
+    static Distance __difference_operator_requirement_violation(Iterator __i, Iterator __j, Distance __n) {
+        __n = __i - __j;
+        return __n;
+    }
+
+    template <typename Exp, typename T, typename Distance>
+    static T __element_access_operator_requirement_violation(Exp __x, T* , Distance __n) {
+        return __x[__n];
+    }
+
+    template <typename Exp, typename T, typename Distance>
+    static void __element_assignment_operator_requirement_violation(Exp __x, T* __t, Distance __n) {
+        __x[__n] = *__t;
+    }
+}; /* class : _STL_ERROR */
+
+/* Associated Type Requirements */
+__STL_BEGIN_NAMESPACE
+template <typename Iterator>
+struct iterator_traits;
+__STL_END_NAMESPACE
+
+template <typename Iterator>
+struct __value_type_type_definition_requirement_violation {
+    typedef typename __STD::iterator_traits<Iterator>::value_type value_type;
 };
+
+template <typename Iterator>
+struct __difference_type_type_definition_requirement_violation {
+    typedef typename __STD::iterator_traits<Iterator>::difference_type difference_type;
+};
+
+template <typename Iterator>
+struct __reference_type_definition_requirement_violation {
+    typedef typename __STD::iterator_traits<Iterator>::reference reference;
+};
+
+template <typename Iterator>
+struct __pointer_type_definition_requirement_violation {
+    typedef typename __STD::iterator_traits<Iterator>::pointer pointer;
+};
+
+template <typename Iterator>
+struct __iterator_category_type_definition_requirement_violation {
+    typedef typename __STD::iterator_traits<Iterator>::iterator_category iterator_category;
+};
+
+/* Assignable Requirements */
+
+template <typename T>
+struct _Assignable_concept_specification {
+    static void _Assignable_requirement_violation(T __a) {
+        _STL_ERROR::__assignment_operator_requirement_violation(__a);
+        _STL_ERROR::__copy_constructor_requirement_violation(__a);
+        _STL_ERROR::__const_parameter_required_for_copy_constructor(__a, __a);
+        _STL_ERROR::__const_parameter_required_for_assignment_operator(__a, __a);
+    }
+};
+
+
 
 #endif
 
