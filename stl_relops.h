@@ -10,22 +10,22 @@ you should not attempt to use it directly
 
 __STL_BEGIN_RELOPS_NAMESPACE
 
-template <typename T>
+template <class T>
 inline bool operator!=(const T& x, const T& y) {
     return !(x == y);
 }
 
-template <typename T>
+template <class T>
 inline bool operator>(const T& x, const T& y) {
     return y < x;
 }
 
-template <typename T>
+template <class T>
 inline bool operator<=(const T& x, const T& y) {
     return !(y < x);
 }
 
-template <typename T>
+template <class T>
 inline bool operator>=(const T& x, const T& y) {
     return !(x < y);
 }

@@ -47,7 +47,7 @@ struct __true_type {};
 
 struct __false_type {};
 
-template <typename T>
+template <class T>
 struct __type_traits {
     typedef __true_type this_dummy_member_must_be_first;
                         /* 
@@ -278,7 +278,7 @@ __STL_TEMPLATE_NULL struct __type_traits<const unsigned char*> {
 
 //The following could be written in terms of numeric_limits.
 //We're doing it separately to reduce the number of dependencies.
-template <typename T>
+template <class T>
 struct _Is_integer {
     typedef __false_type _Integral;
 };
