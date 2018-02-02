@@ -429,7 +429,6 @@ struct __iterator_category_type_definition_requirement_violation {
 };
 
 /* Assignable Requirements */
-
 template <typename T>
 struct _Assignable_concept_specification {
     static void _Assignable_requirement_violation(T __a) {
@@ -440,7 +439,72 @@ struct _Assignable_concept_specification {
     }
 };
 
+/* DefaultConstructible Requirements */
+template <class _Type>
+struct _DefaultConstructible_concept_specification {
+    static void _DefaultConstructible_requirement_violation(_Type __a) {
+        _STL_ERROR::__default_constructor_requirement_violation(__a);
+    }
+};
 
+/* EqualityComparable Requirements */
+template <class _Type>
+struct _EqualityComparable_concept_specification {
+    static void _EqualityComparable_requirement_violation(_Type __a) {
+        _STL_ERROR::__equality_comparable_requirement_violation(__a, __a);
+    }
+};
+
+/* LessThanComparable_Requirements */
+template <class _Type>
+struct _LessThanComparable_concept_specification {
+    static void _LessThanComparable_requirement_violation(_Type __a) {
+        _STL_ERROR::__less_than_comparable_requirement_violation(__a, __a);
+    }
+};
+
+/* TrivialIterator Requirements */
+template <class _TrivialIterator>
+struct _TrivialIterator_concept_specification {
+    static void _TrivialIterator_requirement_violation(_TrivialIterator __i) {
+        typedef typename __value_type_type_definition_requirement_violation<_TrivialIterator>::value_type __T;
+        _Assignable_concept_specification<_TrivialIterator>::_Assignable_requirement_violation(__i);
+        _DefaultConstructible_concept_specification<_TrivialIterator>::_DefaultConstructible_requirement_violation(__i);
+        _EqualityComparable_concept_specification<_TrivialIterator>::_EqualityComparable_requirement_violation(__i);
+        _STL_ERROR::__dereference_operator_requirement_violation(__i);
+    }
+};
+
+template <class _TrivialIterator>
+struct _Mutable_TrivialIterator_concept_specification
+{
+    static void _Mutable_TrivialIterator_requirement_violation(_TrivialIterator __i) {
+        _TrivialIterator_concept_specification<_TrivialIterator>::_TrivialIterator_requirement_violation(__i);
+        _STL_ERROR::__dereference_operator_and_assignment_requirement_violation(__i);
+    }
+};
+
+/* InputIterator Requirements */
+template <class _InputIterator>
+struct _InputIterator_concept_specification {
+    static void _InputIterator_requirement_violation(_InputIterator __i) {
+        _TrivialIterator_concept_specification<_TrivialIterator>::_TrivialIterator_requirement_violation(__i);
+        __difference_type_type_definition_requirement_violation<_InputIterator>();
+        __reference_type_definition_requirement_violation<_InputIterator>();
+        __pointer_type_definition_requirement_violation<_InputIterator>();
+        __iterator_category_type_definition_requirement_violation<_InputIterator>();
+        _STL_ERROR::__preincrement_operator_requirement_violation(__i);
+        _STL_ERROR::__postincrement_operator_requirement_violation(__i);
+    }
+};
+
+/* OutputInterator Requirements */
+template <class _OutputInterator>
+struct _OutputInterator_concept_specification {
+    static void _OutputInterator_requirement_violation(_OutputInterator __i) {
+        _Assignable_concept_specification<_OutputInterator>::_Assignable_requirement_violation(__i);
+    }
+};
 
 #endif
 
