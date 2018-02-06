@@ -499,14 +499,117 @@ struct _InputIterator_concept_specification {
 };
 
 /* OutputInterator Requirements */
-template <class _OutputInterator>
-struct _OutputInterator_concept_specification {
-    static void _OutputInterator_requirement_violation(_OutputInterator __i) {
-        _Assignable_concept_specification<_OutputInterator>::_Assignable_requirement_violation(__i);
+template <class _OutputIterator>
+struct _OutputIterator_concept_specification {
+    static void _OutputIterator_requirement_violation(_OutputIterator __i) {
+        _Assignable_concept_specification<_OutputIterator>::_Assignable_requirement_violation(__i);
+        __iterator_category_type_definition_requirement_violation<_OutputIterator>();
+        _STL_ERROR::__dereference_operator_requirement_violation(__i);
+        _STL_ERROR::__preincrement_operator_requirement_violation(__i);
+        _STL_ERROR::__postincrement_operator_requirement_violation(__i);
+        _STL_ERROR::__postincrement_operator_and_assignment_requirement_violation(__i, *__i);
     }
 };
 
-#endif
+/* ForwardIterator Requirements */
+template <class _ForwardIterator>
+struct _ForwardIterator_concept_specification {
+    static void _ForwardIterator_requirement_violation(_ForwardIterator __i) {
+        _InputIterator_concept_specification<_ForwardIterator>::_InputIterator_requirement_violation(__i);
+    }
+};
 
+template <class _ForwardIterator>
+struct _Mutable_ForwardIterator_concept_specification {
+    static void _Mutable_ForwardIterator_requirement_violation(_ForwardIterator __i) {
+        _ForwardIterator_concept_specification<_ForwardIterator>::_ForwardIterator_requirement_violation(__i);
+        _OutputIterator_concept_specification<_ForwardIterator>::_OutputIterator_requirement_violation(__i);
+    }
+};
 
-#endif
+/* BidirectionalIterator Requirements */
+template <class _BidirectionalIterator>
+struct _BidirectionalIterator_concept_specification {
+    static void _BidirectionalIterator_requirement_violation(_BidirectionalIterator __i) {
+        _ForwardIterator_concept_specification<_BidirectionalIterator>::_ForwardIterator_requirement_violation(__i);
+        _STL_ERROR::__predecrement_operator_requirement_violation(__i);
+        _STL_ERROR::__postdecrement_operator_requirement_violation(__i);
+    }
+};
+
+template <class _BidirectionalIterator>
+struct _Mutable_BidirectionalIterator_concept_specification {
+    static void _Mutable_BidirectionalIterator_requirement_violation(_BidirectionalIterator __i) {
+        _BidirectionalIterator_concept_specification<_BidirectionalIterator>::_BidirectionalIterator_requirement_violation(__i);
+        _Mutable_ForwardIterator_concept_specification<_BidirectionalIterator>::_Mutable_ForwardIterator_requirement_violation(__i);
+        typedef typename __value_type_type_definition_requirement_violation<_BidirectionalIterator>::value_type __T;
+        typename _Mutable_trait<__T>::_Type* __tmp_ptr = 0;
+        _STL_ERROR::__postincrement_operator_and_assignment_requirement_violation(__i, *__tmp_ptr);
+    }
+};
+
+/* RandomAccessIterator Requirements */
+template <class _RanAccIter>
+struct _RandomAccessIterator_concept_specification {
+    static void _RandomAccessIterator_requirement_violation(_RanAccIter __i) {
+        _BidirectionalIterator_concept_specification<_RanAccIter>::_BidirectionalIterator_requirement_violation(__i);
+        _LessThanComparable_concept_specification<_RanAccIter>::_LessThanComparable_requirement_violation(__i);
+        typedef typename __value_type_type_definition_requirement_violation<_RanAccIter>::value_type value_type;
+        typedef typename __difference_type_type_definition_requirement_violation<_RanAccIter>::difference_type _Dist;
+        typedef typename _Mutable_trait<_Dist>::_Type _MutDist;
+        _STL_ERROR::__iterator_addition_assignment_requirement_violation(__i, _MutDist());
+        _STL_ERROR::__iterator_addition_requirement_violation(__i, _MutDist());
+        _STL_ERROR::__iterator_subtraction_assignment_requirement_violation(__i, _MutDist());
+        _STL_ERROR::__iterator_subtraction_requirement_violation(__i, _MutDist());
+        _STL_ERROR::__difference_operator_requirement_violation(__i,__i,_MutDist());
+        typename _Mutable_trait<value_type>::_Type* _dummy_ptr = 0;
+        _STL_ERROR::__element_access_operator_requirement_violation(__i, _dummy_ptr, _MutDist());
+    }
+};
+
+template <class _RandAccIter>
+struct _Mutable_RandomAccessIterator_concept_specification {
+    static void _Mutable_RandomAccessIterator_requirement_violation(_RandAccIter __i) {
+        _RandomAccessIterator_concept_specification<_RandAccIter>::_RandomAccessIterator_requirement_violation(__i);
+        _Mutable_BidirectionalIterator_concept_specification<_RandAccIter>::_Mutable_BidirectionalIterator_requirement_violation(__i);
+        typedef typename __value_type_type_definition_requirement_violation<_RandAccIter>::value_type value_type;
+        typedef typename __difference_type_type_definition_requirement_violation<_RandAccIter>::difference_type _Dist;
+        typename _Mutable_trait<value_type>::_Type* __tmp_ptr = 0;
+        _STL_ERROR::__element_assignment_operator_requirement_violation(__i, __tmp_ptr, _Dist());
+    }
+};
+
+#define __STL_TYPEDEF_REQUIREMENT(__REQUIREMENT) \
+template <class Type> \
+struct __##__REQUIREMENT##__typedef_requirement_violation { \
+    typedef typename Type::__REQUIREMENT __REQUIREMENT; \
+}
+
+__STL_TYPEDEF_REQUIREMENT(value_type);
+__STL_TYPEDEF_REQUIREMENT(difference_type);
+__STL_TYPEDEF_REQUIREMENT(size_type);
+__STL_TYPEDEF_REQUIREMENT(reference);
+__STL_TYPEDEF_REQUIREMENT(const_reference);
+__STL_TYPEDEF_REQUIREMENT(pointer);
+__STL_TYPEDEF_REQUIREMENT(const_pointer);
+
+template <class _Alloc>
+struct _Allocator_concept_specification {
+    static void _Allocator_requirememt_violation(_Alloc __a) {
+        _DefaultConstructible_concept_specification<_Alloc>::_DefaultConstructible_requirement_violation(__a);
+        _EqualityComparable_concept_specification<_Alloc>::_EqualityComparable_requirement_violation(__a);
+        __value_type__typedef_requirement_violation<_Alloc>();
+        __difference_type__typedef_requirement_violation<_Alloc>();
+        __size_type__typedef_requirement_violation<_Alloc>();
+        __reference__typedef_requirement_violation<_Alloc>();
+        __const_reference__typedef_requirement_violation<_Alloc>();
+        __pointer__typedef_requirement_violation<_Alloc>();
+        __const_pointer__typedef_requirement_violation<_Alloc>();
+        typedef typename _Alloc::value_type _Tp;
+        //__STL_REQUIRES_SAME_TYPE(typename _Alloc::__STL_TEMPLATE rebind<_Tp>::other, _Alloc);
+    }
+};
+
+#endif /* __STL_USE_CONCEPT_CHECKS */
+
+#endif /* __CONCEPT_CHECKS_H */
