@@ -16,7 +16,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
@@ -73,9 +73,14 @@
   <ItemGroup>
     <ClInclude Include="concept_checks.h" />
     <ClInclude Include="stl_config.h" />
+    <ClInclude Include="stl_heap.h" />
+    <ClInclude Include="stl_iterator_base.h" />
     <ClInclude Include="stl_pair.h" />
     <ClInclude Include="stl_relops.h" />
     <ClInclude Include="type_traits.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

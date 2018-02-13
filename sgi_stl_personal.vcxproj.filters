@@ -30,5 +30,16 @@
     <ClInclude Include="type_traits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stl_heap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stl_iterator_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
