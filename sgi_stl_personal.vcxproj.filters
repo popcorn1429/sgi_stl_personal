@@ -36,9 +36,18 @@
     <ClInclude Include="stl_iterator_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="container_concepts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stl_function.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test.cpp">
+    <ClCompile Include="test_heap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_subtractive_rng.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

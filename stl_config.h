@@ -385,9 +385,9 @@
 #   define false 0
 #endif
 
-#if defined(__STL_NEED_TYPENAME)
-#   define typename
-#endif
+//#if defined(__STL_NEED_TYPENAME)
+//#   define typename
+//#endif
 
 #if defined(__STL_LIMITED_DEFAULT_TEMPLATES)
 #   define __STL_DEPENDENT_DEFAULT_TMPL(_Tp)

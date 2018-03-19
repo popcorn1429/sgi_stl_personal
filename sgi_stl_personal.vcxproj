@@ -48,11 +48,12 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
+      <AdditionalOptions>/D _CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -72,7 +73,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="concept_checks.h" />
+    <ClInclude Include="container_concepts.h" />
     <ClInclude Include="stl_config.h" />
+    <ClInclude Include="stl_function.h" />
     <ClInclude Include="stl_heap.h" />
     <ClInclude Include="stl_iterator_base.h" />
     <ClInclude Include="stl_pair.h" />
@@ -80,7 +83,8 @@
     <ClInclude Include="type_traits.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="test_heap.cpp" />
+    <ClCompile Include="test_subtractive_rng.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
