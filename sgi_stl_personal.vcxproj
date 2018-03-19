@@ -80,6 +80,7 @@
     <ClInclude Include="stl_iterator_base.h" />
     <ClInclude Include="stl_pair.h" />
     <ClInclude Include="stl_relops.h" />
+    <ClInclude Include="stl_uninitialized.h" />
     <ClInclude Include="type_traits.h" />
   </ItemGroup>
   <ItemGroup>
