@@ -74,9 +74,12 @@
   <ItemGroup>
     <ClInclude Include="concept_checks.h" />
     <ClInclude Include="container_concepts.h" />
+    <ClInclude Include="stl_algobase.h" />
     <ClInclude Include="stl_config.h" />
+    <ClInclude Include="stl_construct.h" />
     <ClInclude Include="stl_function.h" />
     <ClInclude Include="stl_heap.h" />
+    <ClInclude Include="stl_iterator.h" />
     <ClInclude Include="stl_iterator_base.h" />
     <ClInclude Include="stl_pair.h" />
     <ClInclude Include="stl_relops.h" />

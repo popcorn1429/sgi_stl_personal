@@ -45,6 +45,15 @@
     <ClInclude Include="stl_uninitialized.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stl_algobase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stl_construct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stl_iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test_heap.cpp">
