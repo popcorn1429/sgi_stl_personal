@@ -29,7 +29,7 @@ inline void _Construct(_T1* __p) {
 
 template <class _T>
 inline void _Destroy(_T* __p) {
-    __p->~T();
+    __p->~_T();
 }
 
 template <class _ForwardIter>

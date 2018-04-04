@@ -220,7 +220,7 @@ __SGI_STL_DECLARE_COPY_TRIVIAL(double)
 __SGI_STL_DECLARE_COPY_TRIVIAL(long double)
 
 #undef __SGI_STL_DECLARE_COPY_TRIVIAL
-#endif /*__STL_FUNCTION_TMPL_PARTIAL_ORDER*/
+#endif /*__STL_CLASS_PARTIAL_SPECIALIZATION*/
 
 //copy_backward
 template <class _BidirectionalIter1, class _BidirectionalIter2, class _Distance>
@@ -317,8 +317,201 @@ inline pair<_InputIter, _OutputIter> copy_n(_InputIter __first, _Size __count, _
 }
 
 //fill and fill_n
+template <class _ForwardIter, class _Tp>
+void fill(_ForwardIter __first, _ForwardIter __last, const _Tp& __value) {
+    __STL_REQUIRES(_ForwardIter, _Mutable_ForwardIterator);
+    for (; __first != __last; ++__first)
+        *__first = __value;
+}
 
+template <class _OutputIter, class _Size, class _Tp>
+_OutputIter fill_n(_OutputIter __first, _Size __n, const _Tp& __value) {
+    __STL_REQUIRES(_OutputIter, _OutputIterator);
+    for (; __n > 0; --__n, ++__first) {
+        *__first = __value;
+    }
+    return __first;
+}
 
+//Specialization : for one-byte types we can use memset.
+inline void fill(unsigned char* __first, unsigned char* __last, const unsigned char& __c) {
+    unsigned char __tmp = __c;
+    memset(__first, __tmp, __last - __first);
+}
+
+inline void fill(signed char* __first, signed char* __last, const signed char& __c) {
+    signed char __tmp = __c;
+    memset(__first, static_cast<unsigned char>(__tmp), __last - __first);
+}
+
+inline void fill(char* __first, char* __last, const char& __c) {
+    char __tmp = __c;
+    memset(__first, static_cast<unsigned char>(__tmp), __last - __first);
+}
+
+#ifdef __STL_FUNCTION_TMPL_PARTIAL_ORDER
+
+template <class _Size>
+inline unsigned char* fill_n(unsigned char* __first, _Size __n, const unsigned char& __c) {
+    fill(__first, __first + __n, __c);
+    return __first + __n;
+}
+
+template <class _Size>
+inline signed char* fill_n(signed char* __first, _Size __n, const signed char& __c) {
+    fill(__first, __first + __n, __c);
+    return __first + __n;
+}
+
+template <class _Size>
+inline char* fill_n(char* __first, _Size __n, const char& __c) {
+    fill(__first, __first + __n, __c);
+    return __first + __n;
+}
+
+#endif /*__STL_FUNCTION_TMPL_PARTIAL_ORDER*/
+
+//equal and mismatch
+template <class _InputIter1, class _InputIter2>
+pair<_InputIter1, _InputIter2> mismatch(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    __STL_REQUIRES(typename iterator_traits<_InputIter1>::value_type, _EqualityComparable);
+    __STL_REQUIRES(typename iterator_traits<_InputIter2>::value_type, _EqualityComparable);
+    while (__first1 != __last1 && *__first1 == *__first2) {
+        ++__first1;
+        ++__first2;
+    }
+
+    return pair<_InputIter1, _InputIter2>(__first1, __first2);
+}
+
+template <class _InputIter1, class _InputIter2, class _BinaryPredicate>
+pair<_InputIter1, _InputIter2> mismatch(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2, _BinaryPredicate __binary_pred) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    while (__first1 != __last1 && __binary_pred(*__first1, *__first2)) {
+        ++__first1;
+        ++__first2;
+    }
+
+    return pair<_InputIter1, _InputIter2>(__first1, __first2);
+}
+
+template <class _InputIter1, class _InputIter2>
+inline bool equal(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    __STL_REQUIRES(typename iterator_traits<_InputIter1>::value_type, _EqualityComparable);
+    __STL_REQUIRES(typename iterator_traits<_InputIter2>::value_type, _EqualityComparable);
+    for (; __first1 != __last1; ++__first1, ++__first2)
+        if (*__first1 != *__first2)
+            return false;
+
+    return true;
+}
+
+template <class _InputIter1, class _InputIter2, class _BinaryPredicate>
+inline bool equal(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2, _BinaryPredicate __binary_pred) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    for (; __first1 != __last1; ++__first1, ++__first2)
+        if (!__binary_pred(*__first1, *__first2))
+            return false;
+    return true;
+}
+
+//lexicographical_compare and lexicographical_compare_3way.
+//lexicographical_compare_3way is NOT part of the C++ standard.
+
+template <class _InputIter1, class _InputIter2>
+bool lexicographical_compare(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2, _InputIter2 __last2) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    __STL_REQUIRES(typename iterator_traits<_InputIter1>::value_type, _LessThanComparable);
+    __STL_REQUIRES(typename iterator_traits<_InputIter2>::value_type, _LessThanComparable);
+    for (; __first1 != __last1 && __first2 != __last2; ++__first1, ++__first2) {
+        if (*__first1 < *__first2)
+            return true;
+        if (*__first2 < *__first1)
+            return false;
+    }
+
+    return __first1 == __last1 && __first2 != __last2;
+}
+
+template <class _InputIter1, class _InputIter2, class _Compare>
+bool lexicographical_compare(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2, _InputIter2 __last2, _Compare __comp) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    for (; __first1 != __last1 && __first2 != __last2; ++__first1, ++__first2) {
+        if (__comp(*__first1, *__first2))
+            return true;
+        if (__comp(*__first2, *__first1))
+            return false;
+    }
+
+    return __first1 == __last1 && __first2 != __last2;
+}
+
+inline bool lexicographical_compare(const unsigned char* __first1, const unsigned char* __last1, const unsigned char* __first2, const unsigned char* __last2) {
+    const size_t __len1 = __last1 - __first1;
+    const size_t __len2 = __last2 - __first2;
+    const int __result = memcmp(__first1, __first2, min(__len1, __len2));
+    return __result != 0 ? __result < 0 : __len1 < __len2;
+}
+
+inline bool lexicographical_compare(const char* __first1, const char* __last1, const char* __first2, const char* __last2) {
+#if CHAR_MAX == SCHAR_MAX
+    return lexicographical_compare((const signed char*)__first1, (const signed char*)__last1, (const signed char*)__first2, (const signed char*)__last2);
+#else /*CHAR_MAX == SCHAR_MAX*/
+    return lexicographical_compare((const unsigned char*)__first1, (const unsigned char*)__last1, (const unsigned char*)__first2, (const unsigned char*)__last2);
+#endif /*CHAR_MAX == SCHAR_MAX*/
+}
+
+template <class _InputIter1, class _InputIter2>
+int __lexicographical_compare_3way(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2, _InputIter2 __last2) {
+    while (__first1 != __last1 && __first2 != __last2) {
+        if (*__first1 < *__first2)
+            return -1;
+        if (*__first2 < *__first1)
+            return 1;
+
+        ++__first1;
+        ++__first2;
+    }
+
+    if (__first2 == __last2) {
+        return !(__first1 == __last1);
+    }
+    else {
+        return -1;
+    }
+}
+
+inline int __lexicographical_compare_3way(const unsigned char* __first1, const unsigned char* __last1, const unsigned char* __first2, const unsigned char* __last2) {
+    const ptrdiff_t __len1 = __last1 - __first1;
+    const ptrdiff_t __len2 = __last2 - __first2;
+    const int __result = memcmp(__first1, __first2, min(__len1, __len2));
+    return __result != 0 ? __result : (__len1 == __len2 ? 0 : (__len1 < __len2 ? -1 : 1));
+}
+
+inline int __lexicographical_compare_3way(const char* __first1, const char* __last1, const char* __first2, const char* __last2) {
+#if CHAR_MAX == SCHAR_MAX
+    return __lexicographical_compare_3way((const signed char*)__first1, (const signed char*)__last1, (const signed char*)__first2, (const signed char*)__last2);
+#else /*CHAR_MAX == SCHAR_MAX*/
+    return __lexicographical_compare_3way((const unsigned char*)__first1, (const unsigned char*)__last1, (const unsigned char*)__first2, (const unsigned char*)__last2);
+#endif /*CHAR_MAX == SCHAR_MAX*/
+}
+
+template <class _InputIter1, class _InputIter2>
+int lexicographical_compare_3way(_InputIter1 __first1, _InputIter1 __last1, _InputIter2 __first2, _InputIter2 __last2) {
+    __STL_REQUIRES(_InputIter1, _InputIterator);
+    __STL_REQUIRES(_InputIter2, _InputIterator);
+    __STL_REQUIRES(typename iterator_traits<_InputIter1>::value_type, _LessThanComparable);
+    __STL_REQUIRES(typename iterator_traits<_InputIter2>::value_type, _LessThanComparable);
+    return __lexicographical_compare_3way(__first1, __last1, __first2, __last2);
+}
 
 __STL_END_NAMESPACE
 

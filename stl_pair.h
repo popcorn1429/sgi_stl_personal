@@ -47,12 +47,22 @@ inline bool operator>(const pair<T1, T2>& x, const pair<T1, T2>& y) {
     return y < x;
 }
 
+template <class T1, class T2>
+inline bool operator<=(const pair<T1, T2>& x, const pair<T1, T2>& y) {
+    return !(y < x);
+}
 
+template <class T1, class T2>
+inline bool operator>=(const pair<T1, T2>& x, const pair<T1, T2>& y) {
+    return !(x < y);
+}
 
-#endif
+#endif /*__STL_FUNCTION_TMPL_PARTIAL_ORDER*/
 
-
-
+template <class T1, class T2>
+inline pair<T1, T2> make_pair(const T1& x, const T2& y) {
+    return pair<T1, T2>(x, y);
+}
 
 __STL_END_NAMESPACE
 

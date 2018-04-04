@@ -218,7 +218,7 @@ __STL_TEMPLATE_NULL struct __type_traits<long double> {
 
 //specializations for pointer-type T*
 #ifdef __STL_CLASS_PARTIAL_SPECIALIZATION
-template <typename T>
+template <class T>
 struct __type_traits<T*> {
     typedef __true_type  has_trivial_default_constructor;
     typedef __true_type  has_trivial_copy_constructor;
