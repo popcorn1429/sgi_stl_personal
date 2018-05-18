@@ -708,6 +708,284 @@ ForwardIter __rotate(ForwardIter first, ForwardIter middle, ForwardIter last, Di
     return new_middle;
 }
 
+template <typename BidirectionalIter, typename Distance>
+BidirectionalIter __rotate(BidirectionalIter first, BidirectionalIter middle, BidirectionalIter last, Distance*, bidirectional_iterator_tag) {
+    __STL_REQUIRES(BidirectionalIter, _Mutable_BidirectionalIterator);
+    if (first == middle)
+        return last;
+    if (last == middle)
+        return first;
+
+    __reverse(first, middle, bidirectional_iterator_tag());
+    __reverse(middle, last, bidirectional_iterator_tag());
+    while (first != middle && middle != last) {
+        swap(*first++, *--last);
+    }
+
+    if (first == middle) {
+        __reverse(middle, last, bidirectional_iterator_tag());
+        return last;
+    }
+    else {
+        __reverse(first, middle, bidirectional_iterator_tag());
+        return first;
+    }
+}
+
+template <typename RandomAccessIter, typename Distance, typename T>
+RandomAccessIter __rotate(RandomAccessIter first, RandomAccessIter middle, RandomAccessIter last, Distance*, T*) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    Distance n = last - first;
+    Distance k = middle - first;
+    Distance l = n - k;
+    RandomAccessIter result = first + (last - middle);
+
+    if (k == 0)
+        return last;
+    else if (k == l) {
+        swap_ranges(first, middle, middle);
+        return result;
+    }
+
+    Distance d = __gcd(n, k);
+    for (Distance i = 0; i < d; ++i) {
+        T tmp = *first;
+        RandomAccessIter p = first;
+
+        if (k < l) {
+            for (Distance j = 0; j < l / d; ++j) {
+                if (p > first + l) {
+                    *p = *(p - l);
+                    p -= l;
+                }
+                
+                *p = *(p + k);
+                p += k;
+            }
+        }
+        else {
+            for (Distance j = 0; j < k / d - 1; ++j) {
+                if (p < last - k) {
+                    *p = *(p + k);
+                    p += k;
+                }
+
+                *p = *(p - l);
+                p -= l;
+            }
+        }
+
+        *p = tmp;
+        ++first;
+    }
+
+    return result;
+}
+
+template <typename ForwardIter>
+inline ForwardIter rotate(ForwardIter first, ForwardIter middle, ForwardIter last) {
+    __STL_REQUIRES(ForwardIter, _Mutable_ForwardIterator);
+    return __rotate(first, middle, last, __DISTANCE_TYPE(first), __ITERATOR_CATEGORY(first));
+}
+
+template <typename ForwardIter, typename OutputIter>
+OutputIter rotate_copy(ForwardIter first, ForwardIter middle, ForwardIter last, OutputIter result) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    return copy(first, middle, copy(middle, last, result));
+}
+
+//Return a random number in the range [0, n). This function encapsulates
+// wether we're using rand (part of the standard C library) or lrand48
+// (not standard, but a much better choice whenever it's available).
+
+template <typename Distance>
+inline Distance __random_number(Distance n) {
+#ifdef __STL_NO_DRAND48
+    return rand() & n;
+#else 
+    return lrand48() % n;
+#endif
+}
+
+//random_shuffle
+template <typename RandomAccessIter>
+inline void random_shuffle(RandomAccessIter first, RandomAccessIter last) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    if (first == last) return;
+
+    for (RandomAccessIter i = first + 1; i != last; ++i) {
+        iter_swap(i, first + __random_number((i - first) + 1));
+    }
+}
+
+template <typename RandomAccessIter, typename RandomNumberGenerator>
+void random_shuffle(RandomAccessIter first, RandomAccessIter last, RandomNumberGenerator& rand) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    if (first == last) return;
+
+    for (RandomAccessIter i = first + 1; i != last; ++i) {
+        iter_swap(i, first + rand((i - first) + 1));
+    }
+}
+
+//random_sample and random_sample_n (these're not part of the C++ standard)
+template <typename ForwardIter, typename OutputIter, typename Distance>
+OutputIter random_sample_n(ForwardIter first, ForwardIter last, OutputIter out, const Distance n) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    Distance remaining = 0;
+    distance(first, last, remaining);
+    Distance m = min(n, remaining);
+
+    while (m > 0) {
+        if (__random_number(remaining) < m) {
+            *out = *first;
+            ++out;
+            --m;
+        }
+        --remaining;
+        ++first;
+    }
+    return out;
+}
+
+template <typename ForwardIter, typename OutputIter, typename Distance, typename RandomNumberGenerator>
+OutputIter random_sample_n(ForwardIter first, ForwardIter last, OutputIter out, const Distance n, RandomNumberGenerator& rand) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_UNARY_FUNCTION_CHECK(RandomNumberGenerator, Distance, Distance);
+    Distance remaining = 0;
+    distance(first, last, remaining);
+    Distance m = min(n, remaining);
+
+    while (m > 0) {
+        if (rand(remaining) < m) {
+            *out = *first;
+            ++out;
+            --m;
+        }
+        --remaining;
+        ++first;
+    }
+    return out;
+}
+
+template <typename InputIter, typename RandomAccessIter, typename Distance>
+RandomAccessIter __random_sample(InputIter first, InputIter last, RandomAccessIter out, const Distance n) {
+    Distance m = 0;
+    Distance t = n;
+    for (; first != last && m < n; ++m; ++first)
+        out[m] = *first;
+
+    while (first != last) {
+        ++t;
+        Distance M = __random_number(t);
+        if (M < n)
+            out[M] = *first;
+        ++first;
+    }
+    return out + m;
+}
+
+template <typename InputIter, typename RandomAccessIter, typename RandomNumberGenerator, typename Distance>
+RandomAccessIter __random_sample(InputIter first, InputIter last, RandomAccessIter out, RandomNumberGenerator& rand, const Distance n) {
+    __STL_UNARY_FUNCTION_CHECK(RandomNumberGenerator, Distance, Distance);
+    Distance m = 0;
+    Distance t = n;
+    for (; first != last && m < n; ++m, ++first)
+        out[m] = *first;
+
+    while (first != last) {
+        ++t;
+        Distance M = rand(t);
+        if (M < n)
+            out[M] = *first;
+        ++first;
+    }
+    return out + m;
+}
+
+template <typename InputIter, typename RandomAccessIter>
+inline RandomAccessIter random_sample(InputIter first, InputIter last, RandomAccessIter out_first, RandomAccessIter out_last) {
+    __STL_REQUIRES(InputIter, _InputIterator);
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    return __random_sample(first, last, out_first, out_last - out_first);
+}
+
+template <typename InputIter, typename RandomAccessIter, typename RandomNumberGenerator>
+inline RandomAccessIter random_sample(InputIter first, InputIter last, RandomAccessIter out_first, RandomAccessIter out_last, RandomNumberGenerator& rand) {
+    __STL_REQUIRES(InputIter, _InputIterator);
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    return __random_sample(first, last, out_first, rand, out_last - out_first);
+}
+
+//partition, stable_partition, and their auxiliary functions.
+template <typename ForwardIter, typename Predicate>
+ForwardIter __partition(ForwardIter first, ForwardIter last, Predicate pred, forward_iterator_tag) {
+    if (first == last) return first;
+
+    while (pred(*first)) {
+        if (++first == last) return first;
+    }
+    
+    ForwardIter next = first;
+
+    while (++next != last) {
+        if (pred(*next)) {
+            swap(*first, *next);
+            ++first;
+        }
+    }
+
+    return first;
+}
+
+template <typename BidirectionalIter, typename Predicate>
+BidirectionalIter __partition(BidirectionalIter first, BidirectionalIter last, Predicate pred, bidirectional_iterator_tag) {
+    while (true) {
+        while (true) {
+            if (first == last)
+                return first;
+            else if (pred(*first))
+                ++first;
+            else 
+                break;
+        }
+        --last;
+        while (true) {
+            if (first == last)
+                return first;
+            else if (!pred(*last))
+                --last;
+            else
+                break;
+        }
+        iter_swap(first, last);
+        ++first;
+    }
+}
+
+template <typename ForwardIter, typename Predicate>
+inline ForwardIter partition(ForwardIter first, ForwardIter last, Predicate pred) {
+    __STL_REQUIRES(ForwardIter, _Mutable_ForwardIterator);
+    __STL_UNARY_FUNCTION_CHECK(Predicate, bool, typename iterator_traits<ForwardIter>::value_type);
+    return __partition(first, last, pred, __ITERATOR_CATEGORY(first));
+}
+
+template <typename ForwardIter, class Predicate, typename Distance>
+ForwardIter __inplace_stable_partition(ForwardIter first, ForwardIter last, Predicate pred, Distance len) {
+    if (len == 1)
+        return pred(*first) ? last : first;
+
+    ForwardIter middle = first;
+    advance(middle, len / 2);
+    return rotate(__inplace_stable_partition(first, middle, pred, len / 2), middle, __inplace_stable_partition(middle, last, pred, len - len / 2));
+}
+
+
+
+
 __STL_END_NAMESPACE
 
 #endif /*__SGI_STL_INTERNAL_ALGO_H*/
