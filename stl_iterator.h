@@ -103,7 +103,7 @@ public:
 };
 
 #ifndef __STL_CLASS_PARTIAL_SPECIALIZATION
-template <_Container>
+template <typename _Container>
 inline output_iterator_tag iterator_category(const insert_iterator<_Container>&) {
     return output_iterator_tag();
 }

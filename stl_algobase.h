@@ -318,17 +318,17 @@ inline pair<_InputIter, _OutputIter> copy_n(_InputIter __first, _Size __count, _
 
 //fill and fill_n
 template <class _ForwardIter, class _Tp>
-void fill(_ForwardIter __first, _ForwardIter __last, const _Tp& __value) {
+void fill(_ForwardIter __first, _ForwardIter __last, const _Tp& _value) {
     __STL_REQUIRES(_ForwardIter, _Mutable_ForwardIterator);
     for (; __first != __last; ++__first)
-        *__first = __value;
+        *__first = _value;
 }
 
 template <class _OutputIter, class _Size, class _Tp>
-_OutputIter fill_n(_OutputIter __first, _Size __n, const _Tp& __value) {
+_OutputIter fill_n(_OutputIter __first, _Size __n, const _Tp& _value) {
     __STL_REQUIRES(_OutputIter, _OutputIterator);
     for (; __n > 0; --__n, ++__first) {
-        *__first = __value;
+        *__first = _value;
     }
     return __first;
 }

@@ -114,7 +114,7 @@ void __adjust_heap(_RandomAccessIterator __first, _Dist __holeIndex, _Dist __len
         __holeIndex = __secondChild - 1;
     }
 
-    __push_heap(__first, __holeIndex, __topIndex, __val, comp);
+    __push_heap(__first, __holeIndex, __topIndex, __val, __comp);
 }
 
 template <class _RandomAccessIterator, class _Tp, class _Compare, class _Dist>

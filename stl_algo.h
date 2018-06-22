@@ -1,9 +1,9 @@
 #ifndef __SGI_STL_INTERNAL_ALGO_H
 #define __SGI_STL_INTERNAL_ALGO_H
 
-#include "stl_config.h"
 #include "stl_heap.h"
-#include "stl_tempbuf.h" //_Temporary_buffer
+#include "stl_algobase.h" //iter_swap
+#include "stl_tempbuf.h"  //_Temporary_buffer
 
 __STL_BEGIN_NAMESPACE
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32) 
@@ -479,7 +479,7 @@ OutputIter replace_copy_if(InputIter first, InputIter last, OutputIter result, P
 
 //generate, generate_n
 template <typename ForwardIter, typename Generator>
-void generate(typename first, typename last, Generator gen) {
+void generate(ForwardIter first, ForwardIter last, Generator gen) {
     __STL_REQUIRES(ForwardIter, _ForwardIterator);
     __STL_GENERATOR_CHECK(Generator, typename iterator_traits<ForwardIter>::value_type);
     for (; first != last; ++first)
@@ -804,8 +804,8 @@ OutputIter rotate_copy(ForwardIter first, ForwardIter middle, ForwardIter last, 
 template <typename Distance>
 inline Distance __random_number(Distance n) {
 #ifdef __STL_NO_DRAND48
-    return rand() & n;
-#else 
+    return rand() % n;
+#else
     return lrand48() % n;
 #endif
 }
@@ -877,7 +877,7 @@ template <typename InputIter, typename RandomAccessIter, typename Distance>
 RandomAccessIter __random_sample(InputIter first, InputIter last, RandomAccessIter out, const Distance n) {
     Distance m = 0;
     Distance t = n;
-    for (; first != last && m < n; ++m; ++first)
+    for (; first != last && m < n; ++m, ++first)
         out[m] = *first;
 
     while (first != last) {
@@ -1168,7 +1168,7 @@ void __final_insertion_sort(RandomAccessIter first, RandomAccessIter last, Compa
 template <typename Size>
 inline Size __lg(Size n) {
     Size k = 0;
-    for (; n != 1; n >>= 1;) ++k;
+    for (; n != 1; n >>= 1) ++k;
     return k;
 }
 
@@ -1817,7 +1817,170 @@ void __stable_sort_adaptive(RandomAccessIter first, RandomAccessIter last, Point
     __merge_adaptive(first, middle, last, Distance(middle - first), Distance(last - middle), buffer, buffer_size, comp);
 }
 
-template <typename RandomAccessIter, typename T, 
+template <typename RandomAccessIter, typename T, typename Distance>
+inline void __stable_sort_aux(RandomAccessIter first, RandomAccessIter last, T*, Distance*) {
+    _Temporary_buffer<RandomAccessIter, T> buf(first, last);
+    if (0 == buf.begin())
+        __inplace_stable_sort(first, last);
+    else
+        __stable_sort_adaptive(first, last, buf.begin(), Distance(buf.size()));
+}
+
+template <typename RandomAccessIter, typename T, typename Distance, typename Compare>
+inline void __stable_sort_aux(RandomAccessIter first, RandomAccessIter last, T*, Distance*, Compare comp) {
+    _Temporary_buffer<RandomAccessIter, T> buf(first, last);
+    if (0 == buf.begin())
+        __inplace_stable_sort(first, last, comp);
+    else
+        __stable_sort_adaptive(first, last, buf.begin(), Distance(buf.size()), comp);
+}
+
+template <typename RandomAccessIter>
+inline void stable_sort(RandomAccessIter first, RandomAccessIter last) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_REQUIRES(typename iterator_traits<RandomAccessIter>::value_type, _LessThanComparable);
+    __stable_sort_aux(first, last, __VALUE_TYPE(first), __DISTANCE_TYPE(first));
+}
+
+template <typename RandomAccessIter, typename Compare>
+inline void stable_sort(RandomAccessIter first, RandomAccessIter last, Compare comp) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<RandomAccessIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+    __stable_sort_aux(first, last, __VALUE_TYPE(first), __DISTANCE_TYPE(first), comp);
+}
+
+//partial_sort, partial_sort_copy, and auxiliary functions.
+template <typename RandomAccessIter, typename T>
+void __partial_sort(RandomAccessIter first, RandomAccessIter middle, RandomAccessIter last, T*) {
+    make_heap(first, middle);
+    for (RandomAccessIter i = middle; i < last; ++i) {
+        if (*i < *first)
+            __pop_heap(first, middle, i, T(*i), __DISTANCE_TYPE(first));
+    }
+    sort_heap(first, middle);
+}
+
+template <typename RandomAccessIter>
+inline void partial_sort(RandomAccessIter first, RandomAccessIter middle, RandomAccessIter last) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_REQUIRES(typename iterator_traits<RandomAccessIter>::value_type, _LessThanComparable);
+    __partial_sort(first, middle, last, __VALUE_TYPE(first));
+}
+
+template <typename RandomAccessIter, typename T, typename Compare>
+void __partial_sort(RandomAccessIter first, RandomAccessIter middle, RandomAccessIter last, T*, Compare comp) {
+    make_heap(first, middle, comp);
+    for (RandomAccessIter i = middle; i < last; ++i) {
+        if (comp(*i, *first))
+            __pop_heap(first, middle, i, T(*i), comp, __DISTANCE_TYPE(first));
+    }
+    sort_heap(first, middle, comp);
+}
+
+template <typename RandomAccessIter, typename Compare>
+inline void partial_sort(RandomAccessIter first, RandomAccessIter middle, RandomAccessIter last, Compare comp) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<RandomAccessIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+    __partial_sort(first, middle, last, __VALUE_TYPE(first), comp);
+}
+
+template <typename InputIter, typename RandomAccessIter, typename Distance, typename T>
+RandomAccessIter __partial_sort_copy(InputIter first, InputIter last, RandomAccessIter result_first, RandomAccessIter result_last, Distance*, T*) {
+    if (result_first == result_last) return result_last;
+    RandomAccessIter result_real_last = result_first;
+    while (first != last && result_real_last != result_last) {
+        *result_real_last = *first;
+        ++result_real_last;
+        ++first;
+    }
+    make_heap(result_first, result_real_last);
+    while (first != last) {
+        if (*first < *result_first)
+            __adjust_heap(result_first, Distance(0), Distance(result_real_last - result_first), T(*first));
+        ++first;
+    }
+    sort_heap(result_first, result_real_last);
+    return result_real_last;
+}
+
+template <typename InputIter, typename RandomAccessIter>
+inline RandomAccessIter partial_sort_copy(InputIter first, InputIter last, RandomAccessIter result_first, RandomAccessIter result_last) {
+    __STL_REQUIRES(InputIter, _InputIterator);
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_CONVERTIBLE(typename iterator_traits<InputIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+    __STL_REQUIRES(typename iterator_traits<RandomAccessIter>::value_type, _LessThanComparable);
+    __STL_REQUIRES(typename iterator_traits<InputIter>::value_type, _LessThanComparable);
+    return __partial_sort_copy(first, last, result_first, result_last, __DISTANCE_TYPE(result_first), __VALUE_TYPE(first));
+}
+
+template <typename InputIter, typename RandomAccessIter, typename Compare, typename Distance, typename T>
+RandomAccessIter __partial_sort_copy(InputIter first, InputIter last, RandomAccessIter result_first, RandomAccessIter result_last, Compare comp, Distance*, T*) {
+    if (result_first == result_last) return result_last;
+    RandomAccessIter result_real_last = result_first;
+    while (first != last && result_real_last != result_last) {
+        *result_real_last = *first;
+        ++result_real_last;
+        ++first;
+    }
+    make_heap(result_first, result_real_last, comp);
+    while (first != last) {
+        if (comp(*first, *result_first))
+            __adjust_heap(result_first, Distance(0), Distance(result_real_last - result_first), T(*first), comp);
+        ++first;
+    }
+    sort_heap(result_first, result_real_last, comp);
+    return result_real_last;
+}
+
+template <typename InputIter, typename RandomAccessIter, typename Compare>
+inline RandomAccessIter partial_sort_copy(InputIter first, InputIter last, RandomAccessIter result_first, RandomAccessIter result_last, Compare comp) {
+    __STL_REQUIRES(InputIter, _InputIterator);
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_CONVERTIBLE(typename iterator_traits<InputIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<RandomAccessIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+    return __partial_sort_copy(first, last, result_first, result_last, comp, __DISTANCE_TYPE(result_first), __VALUE_TYPE(first));
+}
+
+//nth_element() and its auxiliary functions.
+template <typename RandomAccessIter, typename T>
+void __nth_element(RandomAccessIter first, RandomAccessIter nth, RandomAccessIter last, T*) {
+    while (last - first > 3) {
+        RandomAccessIter cut = __unguarded_partition(first, last, T(__median(*first, *(first + (last - first) / 2), *(last - 1))));
+        if (cut <= nth)
+            first = cut;
+        else
+            last = cut;
+    }
+    __insertion_sort(first, last);
+}
+
+template <typename RandomAccessIter>
+inline void nth_element(RandomAccessIter first, RandomAccessIter nth, RandomAccessIter last) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_REQUIRES(typename iterator_traits<RandomAccessIter>::value_type, _LessThanComparable);
+    __nth_element(first, nth, last, __VALUE_TYPE(first));
+}
+
+template <typename RandomAccessIter, typename T, typename Compare>
+void __nth_element(RandomAccessIter first, RandomAccessIter nth, RandomAccessIter last, T*, Compare comp) {
+    while (last - first > 3) {
+        RandomAccessIter cut = __unguarded_partition(first, last, T(__median(*first, *(first + (last - first) / 2), *(last - 1), comp)), comp);
+        if (cut <= nth)
+            first = cut;
+        else
+            last = cut;
+    }
+    __insertion_sort(first, last, comp);
+}
+
+template <typename RandomAccessIter, typename Compare>
+inline void nth_element(RandomAccessIter first, RandomAccessIter nth, RandomAccessIter last, Compare comp) {
+    __STL_REQUIRES(RandomAccessIter, _Mutable_RandomAccessIterator);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<RandomAccessIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+    __nth_element(first, nth, last, __VALUE_TYPE(first), comp);
+}
+
+//merge, with and without an auxiliary supplied comparison function.
 
 
 
