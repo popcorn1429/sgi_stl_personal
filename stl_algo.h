@@ -1981,8 +1981,704 @@ inline void nth_element(RandomAccessIter first, RandomAccessIter nth, RandomAcce
 }
 
 //merge, with and without an auxiliary supplied comparison function.
+template <typename InputIter1, typename InputIter2, typename OutputIter>
+OutputIter merge(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
 
+    while (first1 != last1 && first2 != last2) {
+        if (*first2 < *first1) {
+            *result = *first2;
+            ++first2;
+        }
+        else {
+            *result = *first1;
+            ++first1;
+        }
+        ++result;
+    }
+    return copy(first2, last2, copy(first1, last1, result));
+}
 
+template <typename InputIter1, typename InputIter2, typename OutputIter, typename Compare>
+OutputIter merge(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result, Compare comp) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    //__STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, iterator_traits<InputIter1>::value_type, iterator_traits<InputIter2>::value_type);
+
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first2, *first1)) {
+            *result = *first2;
+            ++first2;
+        }
+        else {
+            *result = *first1;
+            ++first1;
+        }
+        ++result;
+    }
+    return copy(first2, last2, copy(first1, last1, result));
+}
+
+// Set algorithms: includes, set_union, set_intersection, set_difference,
+// set_symmetric_difference.
+// All of these algorithms have the precondition that their input ranges are
+// sorted and the postconditions that their output ranges are sorted.
+template <typename InputIter1, typename InputIter2>
+bool includes(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+
+    while (first1 != last1 && first2 != last2) {
+        if (*first2 < *first1)
+            return false;
+        else if (*first1 < *first2)
+            ++first1;
+        else
+            ++first1, ++first2;
+    }
+    return first2 == first1;
+}
+
+template <typename InputIter1, typename InputIter2, typename Compare>
+bool includes(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, Compare comp) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    //__STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter1>::value_type);
+
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first2, *first1))
+            return false;
+        else if (comp(*first1, *first2))
+            ++first1;
+        else
+            ++first1, ++first2;
+    }
+    return first2 == first1;
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter>
+OutputIter set_union(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2) {
+            *result = *first1;
+            ++first1;
+        }
+        else if (*first2 < *first1) {
+            *result = *first2;
+            ++first2;
+        }
+        else {
+            *result = *first1;
+            ++first1;
+            ++first2;
+        }
+        ++result;
+    }
+
+    return copy(first2, last2, copy(first1, last1, result));
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter, typename Compare>
+OutputIter set_union(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result, Compare comp) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter1>::value_type);
+
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first1, *first2)) {
+            *result = *first1;
+            ++first1;
+        }
+        else if (comp(*first2, *first1)) {
+            *result = *first2;
+            ++first2;
+        }
+        else {
+            *result = *first1;
+            ++first1;
+            ++first2;
+        }
+        ++result;
+    }
+
+    return copy(first2, last2, copy(first1, last1, result));
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter>
+OutputIter set_intersection(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2)
+            ++first1;
+        else if (*first2 < *first1)
+            ++first2;
+        else {
+            *result = *first1;
+            ++first1;
+            ++first2;
+            ++result;
+        }
+    }
+    return result;
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter, typename Compare>
+OutputIter set_intersection(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result, Compare comp) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    //__STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter1>::value_type);
+
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first1, *first2))
+            ++first1;
+        else if (comp(*first2, *first1))
+            ++first2;
+        else {
+            *result = *first1;
+            ++first1;
+            ++first2;
+            ++result;
+        }
+    }
+    return result;
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter>
+OutputIter set_difference(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2) {
+            *result = *first1;
+            ++first1;
+            ++result;
+        }
+        else if (*first2 < *first1) {
+            ++first2;
+        }
+        else {
+            ++first1;
+            ++first2;
+        }
+    }
+
+    return copy(first1, last1, result);
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter, typename Compare>
+OutputIter set_difference(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result, Compare comp) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    //__STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter1>::value_type);
+
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first1, *first2)) {
+            *result = *first1;
+            ++first1;
+            ++result;
+        }
+        else if (comp(*first2, *first1)) {
+            ++first2;
+        }
+        else {
+            ++first1;
+            ++first2;
+        }
+    }
+
+    return copy(first1, last1, result);
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter>
+OutputIter set_symmetric_difference(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    __STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2) {
+            *result = *first1;
+            ++first1;
+            ++result;
+        }
+        else if (*first2 < *first1) {
+            *result = *first2;
+            ++first2;
+            ++result;
+        }
+        else {
+            ++first1;
+            ++first2;
+        }
+    }
+
+    return copy(first2, last2, copy(first1, last1, result));
+}
+
+template <typename InputIter1, typename InputIter2, typename OutputIter, typename Compare>
+OutputIter set_symmetric_difference(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputIter result, Compare comp) {
+    __STL_REQUIRES(InputIter1, _InputIterator);
+    __STL_REQUIRES(InputIter2, _InputIterator);
+    __STL_REQUIRES(OutputIter, _OutputIterator);
+    __STL_REQUIRES_SAME_TYPE(typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter2>::value_type);
+    //__STL_REQUIRES(typename iterator_traits<InputIter1>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<InputIter1>::value_type, typename iterator_traits<InputIter1>::value_type);
+
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first1, *first2)) {
+            *result = *first1;
+            ++first1;
+            ++result;
+        }
+        else if (comp(*first2, *first1)) {
+            *result = *first2;
+            ++first2;
+            ++result;
+        }
+        else {
+            ++first1;
+            ++first2;
+        }
+    }
+
+    return copy(first2, last2, copy(first1, last1, result));
+}
+
+//min_element and max_element, with and without an explicitly supplied comparison function.
+template <typename ForwardIter>
+ForwardIter max_element(ForwardIter first, ForwardIter last) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES(typename iterator_traits<ForwardIter>::value_type, _LessThanComparable);
+
+    if (first == last) return first;
+
+    ForwardIter result = first;
+    while (++first != last) {
+        if (*result < *first)
+            result = first;
+    }
+    return result;
+}
+
+template <typename ForwardIter, typename Compare>
+ForwardIter max_element(ForwardIter first, ForwardIter last, Compare comp) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    //__STL_REQUIRES(typename iterator_traits<ForwardIter>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<ForwardIter>::value_type, typename iterator_traits<ForwardIter>::value_type);
+
+    if (first == last) return first;
+
+    ForwardIter result = first;
+    while (++first != last) {
+        if (comp(*result, *first))
+            result = first;
+    }
+    return result;
+}
+
+template <typename ForwardIter>
+ForwardIter min_element(ForwardIter first, ForwardIter last) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES(typename iterator_traits<ForwardIter>::value_type, _LessThanComparable);
+
+    if (first == last) return first;
+    ForwardIter result = first;
+    while (++first != last) {
+        if (*first < *result)
+            result = first;
+    }
+    return result;
+}
+
+template <typename ForwardIter, typename Compare>
+ForwardIter min_element(ForwardIter first, ForwardIter last, Compare comp) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    //__STL_REQUIRES(typename iterator_traits<ForwardIter>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<ForwardIter>::value_type, typename iterator_traits<ForwardIter>::value_type);
+
+    if (first == last) return first;
+    ForwardIter result = first;
+    while (++first != last) {
+        if (comp(*first, *result))
+            result = first;
+    }
+    return result;
+}
+
+//next_permutation and prev_permutation, with and without an explicitly supplied comparison function.
+template <typename BidirectionalIter>
+bool next_permutation(BidirectionalIter first, BidirectionalIter last) {
+    __STL_REQUIRES(BidirectionalIter, _BidirectionalIterator);
+    __STL_REQUIRES(typename iterator_traits<BidirectionalIter>::value_type, _LessThanComparable);
+
+    if (first == last) return false;
+
+    BidirectionalIter itr = first;
+    ++itr;
+    if (itr == last)
+        return false;
+    itr = last;
+    --itr;
+
+    while (true) {
+        BidirectionalIter itr2 = itr;
+        --itr;
+        if (*itr < *itr2) {
+            BidirectionalIter itr3 = last;
+            while (!(*itr < *--itr3)) {}
+            iter_swap(itr, itr3);
+            reverse(itr2, last);
+            return true;
+        }
+        if (itr == first) {
+            reverse(first, last);
+            return false;
+        }
+    }
+}
+
+template <typename BidirectionalIter, typename Compare>
+bool next_permutation(BidirectionalIter first, BidirectionalIter last, Compare comp) {
+    __STL_REQUIRES(BidirectionalIter, _BidirectionalIterator);
+    //__STL_REQUIRES(typename iterator_traits<BidirectionalIter>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<BidirectionalIter>::value_type, typename iterator_traits<BidirectionalIter>::value_type);
+
+    if (first == last) return false;
+
+    BidirectionalIter itr = first;
+    ++itr;
+    if (itr == last)
+        return false;
+    itr = last;
+    --itr;
+
+    while (true) {
+        BidirectionalIter itr2 = itr;
+        --itr;
+        if (comp(*itr, *itr2)) {
+            BidirectionalIter itr3 = last;
+            while (!comp(*itr, *--itr3)) {}
+            iter_swap(itr, itr3);
+            reverse(itr2, last);
+            return true;
+        }
+        if (itr == first) {
+            reverse(first, last);
+            return false;
+        }
+    }
+}
+
+template <typename BidirectionalIter>
+bool prev_permutation(BidirectionalIter first, BidirectionalIter last) {
+    __STL_REQUIRES(BidirectionalIter, _BidirectionalIterator);
+    __STL_REQUIRES(typename iterator_traits<BidirectionalIter>::value_type, _LessThanComparable);
+
+    if (first == last) return false;
+
+    BidirectionalIter itr = first;
+    ++itr;
+    if (itr == last)
+        return false;
+
+    itr = last;
+    --itr;
+    while (true) {
+        BidirectionalIter itr2 = itr;
+        --itr;
+        if (*itr2 < *itr) {
+            BidirectionalIter itr3 = last;
+            while (!(*--itr3 < *itr)) {}
+            iter_swap(itr, itr3);
+            reverse(itr2, last);
+            return true;
+        }
+        if (itr == first) {
+            reverse(first, last);
+            return false;
+        }
+    }
+}
+
+template <typename BidirectionalIter, typename Compare>
+bool prev_permutation(BidirectionalIter first, BidirectionalIter last, Compare comp) {
+    __STL_REQUIRES(BidirectionalIter, _BidirectionalIterator);
+    //__STL_REQUIRES(typename iterator_traits<BidirectionalIter>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(Compare, bool, typename iterator_traits<BidirectionalIter>::value_type, typename iterator_traits<BidirectionalIter>::value_type);
+
+    if (first == last) return false;
+
+    BidirectionalIter itr = first;
+    ++itr;
+    if (itr == last)
+        return false;
+
+    itr = last;
+    --itr;
+    while (true) {
+        BidirectionalIter itr2 = itr;
+        --itr;
+        if (comp(*itr2, *itr)) {
+            BidirectionalIter itr3 = last;
+            while (!comp(*--itr3, *itr)) {}
+            iter_swap(itr, itr3);
+            reverse(itr2, last);
+            return true;
+        }
+        if (itr == first) {
+            reverse(first, last);
+            return false;
+        }
+    }
+}
+
+//find_first_of, with and without an explicitly supplied an comparison function.
+template <typename InputIter, typename ForwardIter>
+InputIter find_first_of(InputIter first1, InputIter last1, ForwardIter first2, ForwardIter last2) {
+    __STL_REQUIRES(InputIter, _InputIterator);
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES_BINARY_OP(_OP_EQUAL, bool, typename iterator_traits<InputIter>::value_type, typename iterator_traits<ForwardIter>::value_type);
+
+    for (; first1 != last1; ++first1)
+        for (ForwardIter itr = first2; itr != last2; ++itr)
+            if (*first1 == *itr)
+                return first1;
+    return last1;
+}
+
+template <typename InputIter, typename ForwardIter, typename BinaryPredicate>
+InputIter find_first_of(InputIter first1, InputIter last1, ForwardIter first2, ForwardIter last2, BinaryPredicate pred) {
+    __STL_REQUIRES(InputIter, _InputIterator);
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_BINARY_FUNCTION_CHECK(BinaryPredicate, bool, typename iterator_traits<InputIter>::value_type, typename iterator_traits<ForwardIter>::value_type);
+
+    for (; first1 != last1; ++first1)
+        for (ForwardIter itr = first2; itr != last2; ++itr)
+            if (pred(*first1, *itr))
+                return first1;
+    return last1;
+}
+
+// find_end, with and without an explicitly supplied comparison function.
+// Search [first2, last2) as a subsequence in [first1, last1), and return
+// the *last* possible match. Note that find_end for bidirectional iterators
+// is much faster than for forward iterators.
+
+// find_end for forward iterators.
+template <typename ForwardIter1, typename ForwardIter2>
+ForwardIter1 __find_end(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2, forward_iterator_tag, forward_iterator_tag) {
+    if (first2 == last2) return last1;
+    else {
+        ForwardIter1 result = last1;
+        while (true) {
+            ForwardIter1 new_result = search(first1, last1, first2, last2);
+            if (new_result == last1)
+                return result;
+            else {
+                result = new_result;
+                first1 = new_result;
+                ++first1;
+            }
+        }
+    }
+}
+
+template <typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
+ForwardIter1 __find_end(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2, forward_iterator_tag, forward_iterator_tag, BinaryPredicate pred) {
+    if (first2 == last2) return last1;
+    else {
+        ForwardIter1 result = last1;
+        while (true) {
+            ForwardIter1 new_result = search(first1, last1, first2, last2, pred);
+            if (new_result == last1)
+                return result;
+            else {
+                result = new_result;
+                first1 = new_result;
+                ++first1;
+            }
+        }
+    }
+}
+
+//find_end for bidirectional iterators.
+#ifdef __STL_CLASS_PARTIAL_SPECIALIZATION
+template <typename BidirectionalIter1, typename BidirectionalIter2>
+BidirectionalIter1 __find_end(BidirectionalIter1 first1, BidirectionalIter1 last1, BidirectionalIter2 first2, BidirectionalIter2 last2, bidirectional_iterator_tag, bidirectional_iterator_tag) {
+    __STL_REQUIRES(BidirectionalIter1, _BidirectionalIterator);
+    __STL_REQUIRES(BidirectionalIter2, _BidirectionalIterator);
+    typedef reverse_iterator<BidirectionalIter1> RevIter1;
+    typedef reverse_iterator<BidirectionalIter2> RevIter2;
+
+    RevIter1 rlast1(first1);
+    RevIter2 rlast2(first2);
+    RevIter1 rresult = search(RevIter1(last1), rlast1, RevIter2(last2), rlast2);
+    if (rresult == rlast1)
+        return last1;
+    else {
+        BidirectionalIter1 result = rresult.base();
+        advance(result, -distance(first2, last2));
+        return result;
+    }
+}
+
+template <typename BidirectionalIter1, typename BidirectionalIter2, typename BinaryPredicate>
+BidirectionalIter1 __find_end(BidirectionalIter1 first1, BidirectionalIter1 last1, BidirectionalIter2 first2, BidirectionalIter2 last2, bidirectional_iterator_tag, bidirectional_iterator_tag, BinaryPredicate pred) {
+    __STL_REQUIRES(BidirectionalIter1, _BidirectionalIterator);
+    __STL_REQUIRES(BidirectionalIter2, _BidirectionalIterator);
+    typedef reverse_iterator<BidirectionalIter1> RevIter1;
+    typedef reverse_iterator<BidirectionalIter2> RevIter2;
+
+    RevIter1 rlast1(first1);
+    RevIter2 rlast2(first2);
+    RevIter1 rresult = search(RevIter1(last1), rlast1, RevIter2(last2), rlast2, pred);
+    if (rresult == rlast1)
+        return last1;
+    else {
+        BidirectionalIter1 result = rresult.base();
+        advance(result, -distance(first2, last2));
+        return result;
+    }
+}
+#endif /*__STL_CLASS_PARTIAL_SPECIALIZATION*/
+
+template <typename ForwardIter1, typename ForwardIter2>
+inline ForwardIter1 find_end(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2) {
+    __STL_REQUIRES(ForwardIter1, _ForwardIterator);
+    __STL_REQUIRES(ForwardIter2, _ForwardIterator);
+    __STL_REQUIRES_BINARY_OP(_OP_EQUAL, bool, typename iterator_traits<ForwardIter1>::value_type, typename iterator_traits<ForwardIter2>::value_type);
+    return __find_end(first1, last1, first2, last2, __ITERATOR_CATEGORY(first1), __ITERATOR_CATEGORY(first2));
+}
+
+template <typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
+inline ForwardIter1 find_end(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2, BinaryPredicate pred) {
+    __STL_REQUIRES(ForwardIter1, _ForwardIterator);
+    __STL_REQUIRES(ForwardIter2, _ForwardIterator);
+    __STL_BINARY_FUNCTION_CHECK(BinaryPredicate, bool, typename iterator_traits<ForwardIter1>::value_type, typename iterator_traits<ForwardIter2>::value_type);
+    return __find_end(first1, last1, first2, last2, __ITERATOR_CATEGORY(first1), __ITERATOR_CATEGORY(first2), pred);
+}
+
+// is_heap, a predicate testing whether or not a range is a heap.
+// it's an extension, not part of the C++ standard.
+
+// if range [first, first+n) is a heap
+// for any i, !(first[i] < first[i*2]) && !(first[i] < first[i*2+1]).
+// i, i*2, i*2+1 are less than n.
+template <typename RandomAccessIter, typename Distance>
+bool __is_heap(RandomAccessIter first, Distance n) {
+    Distance parent = 0;
+    for (Distance child = 1; child < n; ++child) {
+        if (first[parent] < first[child])
+            return false;
+
+        if (0 == (child & 1))
+            ++parent;
+    }
+    return true;
+}
+
+template <typename RandomAccessIter, typename Distance, typename StrictWeakOrdering>
+bool __is_heap(RandomAccessIter first, StrictWeakOrdering comp, Distance n) {
+    Distance parent = 0;
+    for (Distance child = 1; child < n; ++child) {
+        if (comp(first[parent], first[child]))
+            return false;
+
+        if (0 == (child & 1))
+            ++parent;
+    }
+    return true;
+}
+
+template <typename RandomAccessIter>
+inline bool is_heap(RandomAccessIter first, RandomAccessIter last) {
+    __STL_REQUIRES(RandomAccessIter, _RandomAccessIterator);
+    __STL_REQUIRES(typename iterator_traits<RandomAccessIter>::value_type, _LessThanComparable);
+
+    return __is_heap(first, last - first);
+}
+
+template <typename RandomAccessIter, typename StrictWeakOrdering>
+inline bool is_heap(RandomAccessIter first, RandomAccessIter last, StrictWeakOrdering comp) {
+    __STL_REQUIRES(RandomAccessIter, _RandomAccessIterator);
+    //__STL_REQUIRES(typename iterator_traits<RandomAccessIter>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(StrictWeakOrdering, bool, typename iterator_traits<RandomAccessIter>::value_type, typename iterator_traits<RandomAccessIter>::value_type);
+
+    return __is_heap(first, comp, last - first);
+}
+
+// is_sorted, a predicated testing whether a range is sorted in non-descending order.
+// This is an extension, not part of the C++ standard.
+template <typename ForwardIter>
+bool is_sorted(ForwardIter first, ForwardIter last) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    __STL_REQUIRES(typename iterator_traits<ForwardIter>::value_type, _LessThanComparable);
+
+    if (first == last) return true;
+
+    ForwardIter next = first;
+    for (++next; next != last; first = next, ++next) {
+        if (*next < *first)
+            return false;
+    }
+    return true;
+}
+
+template <typename ForwardIter, typename StrictWeakOrdering>
+bool is_sorted(ForwardIter first, ForwardIter last, StrictWeakOrdering comp) {
+    __STL_REQUIRES(ForwardIter, _ForwardIterator);
+    //__STL_REQUIRES(typename iterator_traits<ForwardIter>::value_type, _LessThanComparable);
+    __STL_BINARY_FUNCTION_CHECK(StrictWeakOrdering, bool, typename iterator_traits<ForwardIter>::value_type, typename iterator_traits<ForwardIter>::value_type);
+
+    if (first == last) return true;
+
+    ForwardIter next = first;
+    for (++next; next != last; first = next, ++next) {
+        if (comp(*next, *first))
+            return false;
+    }
+    return true;
+}
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma  reset woff 1209
+#endif
 
 __STL_END_NAMESPACE
 

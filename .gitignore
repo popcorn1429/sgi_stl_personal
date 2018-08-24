@@ -46,3 +46,7 @@ sgi_stl_personal.opensdf
 *.suo
 *.sdf
 *.suo
+*.db
+*.opendb
+*.log
+*.user
