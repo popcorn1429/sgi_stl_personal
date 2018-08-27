@@ -50,3 +50,5 @@ sgi_stl_personal.opensdf
 *.opendb
 *.log
 *.user
+*.hint
+*.ipch

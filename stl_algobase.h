@@ -6,11 +6,11 @@
 #include "stl_pair.h"
 #include "type_traits.h"
 
-#include <string.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <new.h>
+#include <cstring>
+#include <climits>
+#include <cstdlib>
+#include <cstddef>
+#include <new>
 
 #ifdef __STL_USE_NEW_IOSTREAMS
 #include <iosfwd>
